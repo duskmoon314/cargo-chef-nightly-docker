@@ -25,8 +25,8 @@ jobs:
               nightly-bullseye-slim
           - context: buster
             tags: |
-              value=nightly
-              value=nightly-buster
+              nightly
+              nightly-buster
           - context: buster/slim
             tags: |
               nightly-slim
@@ -39,6 +39,14 @@ jobs:
       - uses: docker/setup-qemu-action@v1
 
       - uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
