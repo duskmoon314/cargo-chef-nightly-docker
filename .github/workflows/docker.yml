@@ -1,0 +1,62 @@
+name: Build and Push Docker images
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - context: alpine3.12
+            tags: |
+              nightly-alpine3.12
+              nightly-alpine
+          - context: bullseye
+            tags: |
+              nightly-bullseye
+          - context: bullseye/slim
+            tags: |
+              nightly-bullseye-slim
+          - context: buster
+            tags: |
+              value=nightly
+              value=nightly-buster
+          - context: buster/slim
+            tags: |
+              nightly-slim
+              nightly-buster-slim
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: docker/setup-qemu-action@v1
+
+      - uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/cargo-chef
+          tags: ${{ matrix.tags }}
+
+      - uses: docker/build-push-action@v2
+        with:
+          context: ${{ matrix.context }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
