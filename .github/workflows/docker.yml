@@ -61,7 +61,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/cargo-chef
           tags: ${{ matrix.tags }}
 
-      - uses: docker/build-push-action@v2
+      - uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64
